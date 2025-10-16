@@ -14,7 +14,6 @@ class ThemeManager:
     
     def __init__(self, themes_dir: str = "themes"):
         self.themes_dir = themes_dir
-        self.current_theme = "default"
         self.themes = {}
         self.load_builtin_themes()
         self.load_custom_themes()
@@ -22,7 +21,6 @@ class ThemeManager:
     def load_builtin_themes(self):
         """Load built-in themes"""
         self.themes.update({
-            "default": self._get_default_theme(),
             "dark": self._get_dark_theme(),
             "light": self._get_light_theme(),
             "blue": self._get_blue_theme(),
@@ -32,7 +30,8 @@ class ThemeManager:
             "red": self._get_red_theme(),
             "cyberpunk": self._get_cyberpunk_theme(),
             "minimal": self._get_minimal_theme(),
-            "legacy": self._get_legacy_theme()
+            "legacy": self._get_legacy_theme(),
+            "ocean_blue": self._get_ocean_blue_theme()
         })
     
     def load_custom_themes(self):
@@ -114,7 +113,7 @@ class ThemeManager:
         Returns the applied theme name.
         """
         is_dark = self.detect_system_dark_mode()
-        theme_name = "dark" if is_dark else "light"
+        theme_name = "ocean_blue" if is_dark else "light"
         self.apply_theme(theme_name)
         return theme_name
     
@@ -1511,4 +1510,27 @@ class ThemeManager:
                 "highlight": "#007bff",
                 "highlighted_text": "#ffffff"
             }
-        } 
+        }
+
+    def _get_ocean_blue_theme(self) -> Dict[str, Any]:
+        """Get Ocean Blue theme data (integrated from sample_custom_theme.json)"""
+        return {
+            "name": "Ocean Blue",
+            "description": "A calming ocean-inspired theme with blue and teal colors",
+            "stylesheet": "QMainWindow {\n    background-color: #0f1419;\n}\nQWidget {\n    background-color: #0f1419;\n    color: #e6f3ff;\n}\n#loadingWidget {\n    background-color: #1a2332;\n}\nQTabWidget::pane {\n    border: 1px solid #2d3748;\n    background-color: #1a2332;\n    border-radius: 4px;\n}\nQTabBar::tab {\n    background-color: #1a2332;\n    color: #e6f3ff;\n    border: 1px solid #2d3748;\n    padding: 8px 16px;\n    margin-right: 2px;\n    border-top-left-radius: 4px;\n    border-top-right-radius: 4px;\n}\nQTabBar::tab:selected {\n    background-color: #2d3748;\n    border-bottom-color: #2d3748;\n}\nQTabBar::tab:hover {\n    background-color: #2d3748;\n}\nQPushButton {\n    background-color: #3182ce;\n    color: white;\n    border: none;\n    padding: 8px 16px;\n    border-radius: 4px;\n}\nQPushButton:hover {\n    background-color: #4299e1;\n}\nQPushButton:pressed {\n    background-color: #2b6cb0;\n}\nQLineEdit, QTextEdit, QComboBox {\n    border: 1px solid #2d3748;\n    border-radius: 4px;\n    padding: 4px;\n    background-color: #1a2332;\n    color: #e6f3ff;\n}\nQLineEdit:focus, QTextEdit:focus, QComboBox:focus {\n    border-color: #3182ce;\n}\nQLabel {\n    color: #e6f3ff;\n}\nQMessageBox {\n    background-color: #1a2332;\n}\nQMessageBox QPushButton {\n    min-width: 80px;\n}\nQScrollBar:vertical {\n    border: none;\n    background-color: #1a2332;\n    width: 10px;\n    margin: 0px;\n}\nQScrollBar::handle:vertical {\n    background-color: #2d3748;\n    min-height: 20px;\n    border-radius: 5px;\n}\nQScrollBar::handle:vertical:hover {\n    background-color: #3182ce;\n}\nQScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {\n    height: 0px;\n}\nQScrollBar:horizontal {\n    border: none;\n    background-color: #1a2332;\n    height: 10px;\n    margin: 0px;\n}\nQScrollBar::handle:horizontal {\n    background-color: #2d3748;\n    min-width: 20px;\n    border-radius: 5px;\n}\nQScrollBar::handle:horizontal:hover {\n    background-color: #3182ce;\n}\nQScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {\n    width: 0px;\n}",
+            "palette": {
+                "window": "#0f1419",
+                "window_text": "#e6f3ff",
+                "base": "#1a2332",
+                "alternate_base": "#2d3748",
+                "tool_tip_base": "#ffffff",
+                "tool_tip_text": "#000000",
+                "text": "#e6f3ff",
+                "button": "#1a2332",
+                "button_text": "#e6f3ff",
+                "bright_text": "#3182ce",
+                "link": "#3182ce",
+                "highlight": "#3182ce",
+                "highlighted_text": "#ffffff"
+            }
+        }

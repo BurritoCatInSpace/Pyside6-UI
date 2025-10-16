@@ -209,7 +209,7 @@ class ThemeDialog(QDialog):
             # Update info
             info_text = f"Name: {theme_data.get('name', theme_name)}\n"
             info_text += f"Description: {theme_data.get('description', 'No description')}\n"
-            info_text += f"Type: {'Built-in' if theme_name in ['default', 'dark', 'light', 'blue', 'green', 'purple', 'orange', 'red', 'cyberpunk', 'minimal', 'legacy'] else 'Custom'}"
+            info_text += f"Type: {'Built-in' if theme_name in ['dark', 'light', 'blue', 'green', 'purple', 'orange', 'red', 'cyberpunk', 'minimal', 'legacy', 'ocean_blue'] else 'Custom'}"
             
             self.theme_info.setPlainText(info_text)
             
