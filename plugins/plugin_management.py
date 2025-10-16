@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (
     QHeaderView, QCheckBox, QMessageBox, QLineEdit, QComboBox, QSplitter, QWidget, QFormLayout,
     QTextEdit, QAbstractItemView, QMenu
 )
-from plugins.base import plugin_registry
+from .base import plugin_registry
 from PySide6.QtCore import Signal, Qt, QPoint
 import inspect
 import os
@@ -154,7 +154,7 @@ class PluginManagementDialog(QDialog):
 
     def reload_plugins(self):
         # Clear and re-discover plugins
-        from plugins.discovery import discover_and_register_plugins
+        from .discovery import discover_and_register_plugins
         plugin_registry.clear()
         discover_and_register_plugins()
         QMessageBox.information(self, "Plugins Reloaded", "Plugins have been reloaded.")

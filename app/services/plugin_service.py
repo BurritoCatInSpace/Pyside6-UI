@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Tuple, Dict, Any, List, Type
 
-from plugins.base import plugin_registry
+from ...plugins import plugin_registry
 # Try to import from platforms first, fallback to ui plugins
 try:
     from platforms.core_plugins import get_core_plugins
@@ -17,7 +17,7 @@ except ImportError:
             sys.path.insert(0, parent_dir)
         from platforms.core_plugins import get_core_plugins
     except ImportError:
-        from plugins.core_plugins import get_core_plugins
+        from ...plugins.core_plugins import get_core_plugins
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ def discover_and_register_all_plugins() -> Tuple[List[Type[Any]], Dict[str, Any]
 
         # Discover plugins (core plugins should also declare is_core_plugin = True)
         try:
-            from plugins.discovery import discover_and_register_plugins as discover
+            from ...plugins.discovery import discover_and_register_plugins as discover
 
             registration_results, discover_summary = discover()
             if isinstance(discover_summary, dict):

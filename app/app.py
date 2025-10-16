@@ -7,9 +7,9 @@ import platform
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QFont
 
-from app.services.logging_service import setup_logging
-from themes.theme_manager import ThemeManager
-from app.ui.main_window import MainWindow
+from .services.logging_service import setup_logging
+from ..themes.theme_manager import ThemeManager
+from .ui.main_window import MainWindow
 # Try to import from platforms first, fallback to ui app constants
 try:
     from platforms.constants import VERSION, VERSION_NAME
@@ -23,12 +23,12 @@ except ImportError:
             sys.path.insert(0, parent_dir)
         from platforms.constants import VERSION, VERSION_NAME
     except ImportError:
-        from app.constants import VERSION, VERSION_NAME
+        from .constants import VERSION, VERSION_NAME
 
 # Linux-specific checks
 if platform.system().lower() == "linux":
-    from app.utils.qt_dependencies_linux import ensure_qt_xcb_dependencies_installed
-    from app.utils.elevation_linux import is_admin, ensure_root_privileges
+    from .utils.qt_dependencies_linux import ensure_qt_xcb_dependencies_installed
+    from .utils.elevation_linux import is_admin, ensure_root_privileges
 
 
 def run(argv: List[str]) -> int:

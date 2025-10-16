@@ -20,10 +20,10 @@ from PySide6.QtGui import QAction
 
 import logging
 
-from plugins.base import plugin_registry
-from plugins.plugin_management import PluginManagementDialog
-from themes.theme_manager import ThemeManager
-from themes.theme_dialog import ThemeDialog
+from ...plugins import plugin_registry
+from ...plugins.plugin_management import PluginManagementDialog
+from ...themes.theme_manager import ThemeManager
+from ...themes.theme_dialog import ThemeDialog
 # Try to import from platforms first, fallback to ui app constants
 try:
     from platforms.constants import VERSION, VERSION_NAME, SUPPORTED_PLATFORMS, VERSION_INFO, REQUIRE_ADMIN_BY_DEFAULT
@@ -37,25 +37,25 @@ except ImportError:
             sys.path.insert(0, parent_dir)
         from platforms.constants import VERSION, VERSION_NAME, SUPPORTED_PLATFORMS, VERSION_INFO, REQUIRE_ADMIN_BY_DEFAULT
     except ImportError:
-        from app.constants import VERSION, VERSION_NAME, SUPPORTED_PLATFORMS, VERSION_INFO, REQUIRE_ADMIN_BY_DEFAULT
-from app.ui.widgets.loading_placeholder import LoadingPlaceholder
-from app.ui.widgets.admin_required_placeholder import AdminRequiredPlaceholder
-from app.ui.widgets.error_placeholder import ErrorPlaceholder
-from app.services.plugin_service import discover_and_register_all_plugins
-from app.utils.window_title import build_title
-from app.utils.version import build_version_details
-from app.utils.admin import needs_admin_for_plugin
-from app.ui.widgets.loading_placeholder import LoadingPlaceholder
-from app.ui.widgets.admin_required_placeholder import AdminRequiredPlaceholder
-from app.ui.widgets.error_placeholder import ErrorPlaceholder
+        from ..constants import VERSION, VERSION_NAME, SUPPORTED_PLATFORMS, VERSION_INFO, REQUIRE_ADMIN_BY_DEFAULT
+from ..ui.widgets.loading_placeholder import LoadingPlaceholder
+from ..ui.widgets.admin_required_placeholder import AdminRequiredPlaceholder
+from ..ui.widgets.error_placeholder import ErrorPlaceholder
+from ..services.plugin_service import discover_and_register_all_plugins
+from ..utils.window_title import build_title
+from ..utils.version import build_version_details
+from ..utils.admin import needs_admin_for_plugin
+from ..ui.widgets.loading_placeholder import LoadingPlaceholder
+from ..ui.widgets.admin_required_placeholder import AdminRequiredPlaceholder
+from ..ui.widgets.error_placeholder import ErrorPlaceholder
 
 CURRENT_PLATFORM = platform.system().lower()
 
 try:
     if CURRENT_PLATFORM == "windows":
-        from app.utils.elevation_windows import is_admin, run_as_admin
+        from ..utils.elevation_windows import is_admin, run_as_admin
     elif CURRENT_PLATFORM == "linux":
-        from app.utils.elevation_linux import is_admin, get_sudo_status
+        from ..utils.elevation_linux import is_admin, get_sudo_status
     else:  # pragma: no cover - unsupported platforms
         raise RuntimeError(f"Unsupported platform: {CURRENT_PLATFORM}")
 except Exception as e:  # pragma: no cover - import-time platform errors
