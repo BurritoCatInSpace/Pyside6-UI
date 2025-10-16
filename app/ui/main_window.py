@@ -24,7 +24,20 @@ from plugins.base import plugin_registry
 from plugins.plugin_management import PluginManagementDialog
 from themes.theme_manager import ThemeManager
 from themes.theme_dialog import ThemeDialog
-from app.constants import VERSION, VERSION_NAME, SUPPORTED_PLATFORMS, VERSION_INFO, REQUIRE_ADMIN_BY_DEFAULT
+# Try to import from platforms first, fallback to ui app constants
+try:
+    from platforms.constants import VERSION, VERSION_NAME, SUPPORTED_PLATFORMS, VERSION_INFO, REQUIRE_ADMIN_BY_DEFAULT
+except ImportError:
+    try:
+        # If running from ui directory, try parent directory
+        import sys
+        import os
+        parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+        if parent_dir not in sys.path:
+            sys.path.insert(0, parent_dir)
+        from platforms.constants import VERSION, VERSION_NAME, SUPPORTED_PLATFORMS, VERSION_INFO, REQUIRE_ADMIN_BY_DEFAULT
+    except ImportError:
+        from app.constants import VERSION, VERSION_NAME, SUPPORTED_PLATFORMS, VERSION_INFO, REQUIRE_ADMIN_BY_DEFAULT
 from app.ui.widgets.loading_placeholder import LoadingPlaceholder
 from app.ui.widgets.admin_required_placeholder import AdminRequiredPlaceholder
 from app.ui.widgets.error_placeholder import ErrorPlaceholder

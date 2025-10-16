@@ -4,7 +4,20 @@ import logging
 from typing import Tuple, Dict, Any, List, Type
 
 from plugins.base import plugin_registry
-from plugins.core_plugins import get_core_plugins
+# Try to import from platforms first, fallback to ui plugins
+try:
+    from platforms.core_plugins import get_core_plugins
+except ImportError:
+    try:
+        # If running from ui directory, try parent directory
+        import sys
+        import os
+        parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        if parent_dir not in sys.path:
+            sys.path.insert(0, parent_dir)
+        from platforms.core_plugins import get_core_plugins
+    except ImportError:
+        from plugins.core_plugins import get_core_plugins
 
 logger = logging.getLogger(__name__)
 

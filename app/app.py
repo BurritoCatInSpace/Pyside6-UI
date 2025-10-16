@@ -10,7 +10,20 @@ from PySide6.QtGui import QFont
 from app.services.logging_service import setup_logging
 from themes.theme_manager import ThemeManager
 from app.ui.main_window import MainWindow
-from app.constants import VERSION, VERSION_NAME
+# Try to import from platforms first, fallback to ui app constants
+try:
+    from platforms.constants import VERSION, VERSION_NAME
+except ImportError:
+    try:
+        # If running from ui directory, try parent directory
+        import sys
+        import os
+        parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        if parent_dir not in sys.path:
+            sys.path.insert(0, parent_dir)
+        from platforms.constants import VERSION, VERSION_NAME
+    except ImportError:
+        from app.constants import VERSION, VERSION_NAME
 
 # Linux-specific checks
 if platform.system().lower() == "linux":

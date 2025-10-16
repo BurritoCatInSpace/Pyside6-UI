@@ -7,7 +7,20 @@ import traceback
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
 import warnings
-from app.constants import LOGGING_ENABLED, LOG_TO_FILE
+# Try to import from platforms first, fallback to ui app constants
+try:
+    from platforms.constants import LOGGING_ENABLED, LOG_TO_FILE
+except ImportError:
+    try:
+        # If running from ui directory, try parent directory
+        import sys
+        import os
+        parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        if parent_dir not in sys.path:
+            sys.path.insert(0, parent_dir)
+        from platforms.constants import LOGGING_ENABLED, LOG_TO_FILE
+    except ImportError:
+        from app.constants import LOGGING_ENABLED, LOG_TO_FILE
 
 
 SAVE_LOGS_TO_FILE = LOG_TO_FILE
