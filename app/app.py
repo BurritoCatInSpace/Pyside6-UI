@@ -10,6 +10,7 @@ from PySide6.QtGui import QFont
 from .services.logging_service import setup_logging
 from ..themes.theme_manager import ThemeManager
 from .ui.main_window import MainWindow
+from .utils.console import apply_console_setting
 # Try to import from platforms first, fallback to ui app constants
 try:
     from platforms.constants import VERSION, VERSION_NAME
@@ -33,6 +34,9 @@ if platform.system().lower() == "linux":
 
 def run(argv: List[str]) -> int:
     """Application bootstrap. Mirrors previous behavior from main.py without changes."""
+    # Apply console visibility setting based on SHOW_CONSOLE constant
+    apply_console_setting()
+    
     logger = setup_logging()
     logger.info(f"Starting {VERSION_NAME} v{VERSION} on {platform.system().lower()}")
 

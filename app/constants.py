@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 # Version information
-VERSION = "2.0.0"
+VERSION = "2.1.0"
 VERSION_NAME = "Basic UI Application"
 SUPPORTED_PLATFORMS = ["Windows", "Linux"]
 
@@ -21,4 +21,6 @@ LOGGING_ENABLED = True
 # If True, save logs to files in the logs directory (does not work with LOGGING_ENABLED = False)
 LOG_TO_FILE = True
 
+# Console configuration
+SHOW_CONSOLE = False
 
