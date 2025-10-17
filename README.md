@@ -23,18 +23,6 @@ if __name__ == "__main__":
     raise SystemExit(run(sys.argv))
 ```
 
-### How to run
-- Windows (PowerShell):
-  ```bash
-  py main.py
-  ```
-- Linux/macOS:
-  ```bash
-  python3 main.py
-  ```
-
-Run these commands from the directory that contains `main.py` and the `GUI/` folder.
-
 ### Set up a virtual environment and install PySide6
 It’s recommended to run the GUI inside a virtual environment.
 
@@ -58,6 +46,18 @@ To leave the environment later, run:
 ```bash
 deactivate
 ```
+
+### How to run
+- Windows (PowerShell):
+  ```bash
+  py main.py
+  ```
+- Linux/macOS:
+  ```bash
+  python3 main.py
+  ```
+
+Run these commands from the directory that contains `main.py` and the `GUI/` folder.
 
 ### Troubleshooting
 - If you see `ModuleNotFoundError: No module named 'GUI'`:
