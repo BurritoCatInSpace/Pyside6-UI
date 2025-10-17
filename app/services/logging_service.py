@@ -32,6 +32,25 @@ class CustomFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         if not hasattr(record, "threadName"):
             record.threadName = "MainThread"
+        elif record.threadName and record.threadName.startswith("Dummy-"):
+            # Replace Qt internal thread names with more descriptive names
+            # This handles cases where Qt creates internal threads with "Dummy-X" names
+            import threading
+            current_thread = threading.current_thread()
+            if hasattr(current_thread, 'objectName') and current_thread.objectName():
+                record.threadName = current_thread.objectName()
+            else:
+                # Create a meaningful name based on the logger context
+                logger_name = getattr(record, 'name', '')
+                if 'plugin' in logger_name.lower():
+                    record.threadName = "PluginLoader"
+                elif 'main_window' in logger_name.lower():
+                    record.threadName = "MainWindow"
+                elif 'tab' in logger_name.lower():
+                    record.threadName = "TabWorker"
+                else:
+                    record.threadName = "BackgroundWorker"
+        
         if not hasattr(record, "process"):
             record.process = os.getpid()
         if record.exc_info:

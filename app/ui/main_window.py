@@ -82,6 +82,7 @@ class TabLoaderThread(QThread):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setObjectName("TabLoaderThread")
         self.tab_widget: Optional[QTabWidget] = None
 
     def set_tab_widget(self, tab_widget: QTabWidget) -> None:
