@@ -132,6 +132,14 @@ class PluginDiscovery:
         if plugins_dir_str not in sys.path:
             sys.path.insert(0, plugins_dir_str)
         
+        # For external plugins, we need to add the parent directory (project root) to the path
+        # so plugins can import from GUI.plugins and other project modules
+        # But only do this if we're not already in the GUI/plugins directory
+        if not plugins_dir_str.endswith('GUI/plugins') and not plugins_dir_str.endswith('GUI\\plugins'):
+            project_root = str(plugins_path.parent.absolute())
+            if project_root not in sys.path:
+                sys.path.insert(0, project_root)
+        
         try:
             # Find all Python files in the plugins directory
             python_files = list(plugins_path.glob("*.py"))
@@ -141,7 +149,9 @@ class PluginDiscovery:
                 '__init__.py',
                 'base.py',
                 'discovery.py',
-                'core_plugins.py'
+                'core_plugins.py',
+                'plugin_management.py',
+                'registry.py'
             }
             
             for py_file in python_files:
@@ -175,9 +185,14 @@ class PluginDiscovery:
                     logger.error(f"Failed to load local plugin from {py_file}: {e}")
         
         finally:
-            # Remove plugins directory from Python path
+            # Remove directories from Python path
             if plugins_dir_str in sys.path:
                 sys.path.remove(plugins_dir_str)
+            # Only remove project_root if we added it
+            if not plugins_dir_str.endswith('GUI/plugins') and not plugins_dir_str.endswith('GUI\\plugins'):
+                project_root = str(plugins_path.parent.absolute())
+                if project_root in sys.path:
+                    sys.path.remove(project_root)
         
         return plugins
     

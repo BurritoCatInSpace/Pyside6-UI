@@ -4,7 +4,7 @@ Example plugin for Basic GUI Application.
 This demonstrates how to create a simple tab plugin.
 """
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QTextEdit
-from plugins.base import BaseTabPlugin
+from GUI.plugins.base import BaseTabPlugin
 
 class ExampleTabPlugin(BaseTabPlugin):
     """Example tab plugin demonstrating the plugin interface."""
@@ -16,7 +16,7 @@ class ExampleTabPlugin(BaseTabPlugin):
     plugin_version = "1.0.0"
     plugin_author = "Example Author"
     # Optional: set to True to have the plugin appear disabled by default
-    disabled_by_default = False
+    disabled_by_default = True
 
     @classmethod
     def create_widget(cls, parent=None):

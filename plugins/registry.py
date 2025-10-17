@@ -1,7 +1,10 @@
+import logging
 from typing import Optional, List, Dict, Type
 
 # Import after BaseTabPlugin is defined to avoid circular import issues
 from .base import BaseTabPlugin  # type: ignore
+
+logger = logging.getLogger(__name__)
 
 
 class PluginRegistry:
@@ -33,6 +36,20 @@ class PluginRegistry:
         # Check compatibility
         if not plugin_class.is_compatible():
             return  # Skip incompatible plugins
+
+        # Handle name conflicts: core plugins take priority over external plugins
+        if plugin_name in self._plugins:
+            existing_is_core = plugin_name in self._core_plugins
+            if existing_is_core and not is_core:
+                # Skip external plugin that conflicts with existing core plugin
+                logger.warning(f"Skipping external plugin '{plugin_name}' - conflicts with existing core plugin")
+                return
+            elif not existing_is_core and is_core:
+                # Replace external plugin with core plugin (core takes priority)
+                logger.info(f"Replacing external plugin '{plugin_name}' with core plugin")
+                # Remove from external plugins
+                if plugin_name in self._external_plugins:
+                    del self._external_plugins[plugin_name]
 
         self._plugins[plugin_name] = plugin_class
 
