@@ -244,13 +244,12 @@ class MainWindow(QMainWindow):
                     header = table.horizontalHeader()
                     # Check if sections are visible before resizing
                     if header.count() > 0:
-                        # Set resize mode to Interactive but resize to contents initially
-                        # This allows users to resize but starts with good width
+                        # Keep interactive mode but auto-size once so users can still adjust
                         for col in range(header.count()):
                             # Don't override if specifically set to something else by the plugin
                             # Only apply if using default behavior
                             if header.sectionResizeMode(col) == QHeaderView.ResizeMode.Interactive:
-                                header.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
+                                header.resizeSectionToContents(col)
                 except Exception:
                     pass
             
@@ -260,7 +259,7 @@ class MainWindow(QMainWindow):
                     if header.count() > 0:
                         for col in range(header.count()):
                             if header.sectionResizeMode(col) == QHeaderView.ResizeMode.Interactive:
-                                header.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
+                                header.resizeSectionToContents(col)
                 except Exception:
                     pass
 
