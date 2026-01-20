@@ -14,9 +14,7 @@ import logging
 import platform
 from pathlib import Path
 from typing import Dict, List, Optional, Any, TYPE_CHECKING
-from PySide6.QtWidgets import QApplication
-from PySide6.QtGui import QPalette, QColor
-from PySide6.QtCore import Qt
+from ..app.qt_bindings import QApplication, QPalette, QColor, Qt
 
 # Try to get NEW_UI_ENABLED_BY_DEFAULT from platform constants first, fallback to GUI constants
 try:

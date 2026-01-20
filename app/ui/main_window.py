@@ -16,9 +16,13 @@ if TYPE_CHECKING:
     from ..services.settings_service import SettingsService
     from ...themes.theme_manager import ThemeManager
 
-from PySide6.QtCore import QPoint, Qt, Slot
-from PySide6.QtGui import QAction, QCloseEvent, QKeySequence
-from PySide6.QtWidgets import (
+from ..qt_bindings import (
+    QPoint,
+    Qt,
+    Slot,
+    QAction,
+    QCloseEvent,
+    QKeySequence,
     QApplication,
     QMainWindow,
     QMenu,
@@ -45,7 +49,6 @@ from .controllers.toast_manager import ToastManager
 from .dialogs.plugin_dialog import PluginManagementDialog
 from .dialogs.theme_dialog import ThemeDialog
 from .dialogs.log_viewer_dialog import LogViewerDialog
-from .widgets.loading_placeholder import LoadingPlaceholder
 from ..utils.display_utils import build_version_details
 from ..utils.imports import get_platforms_constants
 
@@ -285,7 +288,7 @@ class MainWindow(QMainWindow):
         
         # Fix for table header resizing issues (only in new UI)
         if self.settings_service and self.settings_service.get_new_ui_enabled():
-            from PySide6.QtWidgets import QTableView, QHeaderView, QTreeWidget
+            from ..qt_bindings import QTableView, QHeaderView, QTreeWidget
             for i in range(self.tab_widget.count()):
                 widget = self.tab_widget.widget(i)
                 # Recursively find all QTableViews and QTreeWidgets
@@ -448,6 +451,7 @@ class MainWindow(QMainWindow):
     def show_about_dialog(self) -> None:
         """Show the About dialog without blocking the main window."""
         from ..constants import VERSION as GUI_VERSION, VERSION_NAME as DEFAULT_VERSION_NAME
+        from ..qt_bindings import get_binding_name
         
         if self._about_dialog and self._about_dialog.isVisible():
             self._about_dialog.raise_()
@@ -456,11 +460,18 @@ class MainWindow(QMainWindow):
 
         has_external_constants = VERSION_NAME != DEFAULT_VERSION_NAME
         version_line = f"<p><b>Version:</b> {VERSION}</p>" if has_external_constants else ""
+        binding_name = get_binding_name()
+        binding_line = (
+            f"<p><b>Qt Binding:</b> {binding_name}</p>"
+            if binding_name != "pyside6"
+            else ""
+        )
         about_text = (
             f"<h2>{VERSION_NAME}</h2>"
             f"{version_line}"
             f"<p><b>GUI API Version:</b> {GUI_VERSION}</p>"
             f"<p><b>Platform:</b> {CURRENT_PLATFORM.title()}</p>"
+            f"{binding_line}"
         )
 
         msg = QMessageBox(self)

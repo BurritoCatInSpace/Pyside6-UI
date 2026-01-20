@@ -10,8 +10,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Optional, Callable, TYPE_CHECKING, List
 
-from PySide6.QtCore import Signal, QObject
-from PySide6.QtWidgets import QTabWidget, QWidget
+from ...qt_bindings import Signal, QObject, QTabWidget, QWidget
 
 from ...constants import CURRENT_PLATFORM
 

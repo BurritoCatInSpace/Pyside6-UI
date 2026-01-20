@@ -10,7 +10,7 @@ import logging
 from typing import Any, Dict, List, Optional, Type, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from PySide6.QtWidgets import QWidget
+    from ..app.qt_bindings import QWidget
     from ..app.services.container import ServiceContainer
 
 logger = logging.getLogger(__name__)

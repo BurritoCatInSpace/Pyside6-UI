@@ -11,7 +11,7 @@ import platform
 import sys
 from typing import List
 
-from PySide6.QtWidgets import QApplication
+from .qt_bindings import QApplication
 
 from .constants import VERSION as GUI_API_VERSION
 from .services.logging_service import setup_logging, set_dev_logging_override

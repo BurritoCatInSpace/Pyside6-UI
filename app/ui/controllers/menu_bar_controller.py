@@ -10,9 +10,7 @@ from __future__ import annotations
 import logging
 from typing import Optional, Callable, TYPE_CHECKING, Any
 
-from PySide6.QtCore import QObject, Signal
-from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QMenuBar, QMenu, QWidget
+from ...qt_bindings import QObject, Signal, QAction, QMenuBar, QMenu, QWidget
 
 from ...constants import CURRENT_PLATFORM
 

@@ -10,8 +10,17 @@ from __future__ import annotations
 import logging
 from typing import Optional, TYPE_CHECKING
 
-from PySide6.QtCore import QTimer, QObject, Qt, QPoint
-from PySide6.QtWidgets import QStatusBar, QPushButton, QWidget, QHBoxLayout, QLabel
+from ...qt_bindings import (
+    QTimer,
+    QObject,
+    Qt,
+    QPoint,
+    QStatusBar,
+    QPushButton,
+    QWidget,
+    QHBoxLayout,
+    QLabel,
+)
 
 if TYPE_CHECKING:
     from ...services.notification_service import NotificationService

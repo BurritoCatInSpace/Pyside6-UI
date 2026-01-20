@@ -21,7 +21,7 @@ from typing import (
 )
 
 if TYPE_CHECKING:
-    from PySide6.QtWidgets import QWidget
+    from ..app.qt_bindings import QWidget
     from .types import MenuItemDefinition, ToolbarAction
     from ..app.services.container import ServiceContainer
 
