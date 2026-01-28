@@ -451,7 +451,7 @@ class MainWindow(QMainWindow):
     def show_about_dialog(self) -> None:
         """Show the About dialog without blocking the main window."""
         from ..constants import VERSION as GUI_VERSION, VERSION_NAME as DEFAULT_VERSION_NAME
-        from ..qt_bindings import get_binding_name
+        from ..utils.about_info import create_about_dialog
         
         if self._about_dialog and self._about_dialog.isVisible():
             self._about_dialog.raise_()
@@ -459,28 +459,13 @@ class MainWindow(QMainWindow):
             return
 
         has_external_constants = VERSION_NAME != DEFAULT_VERSION_NAME
-        version_line = f"<p><b>Version:</b> {VERSION}</p>" if has_external_constants else ""
-        binding_name = get_binding_name()
-        binding_line = (
-            f"<p><b>Qt Binding:</b> {binding_name}</p>"
-            if binding_name != "pyside6"
-            else ""
+        msg = create_about_dialog(
+            self,
+            app_name=VERSION_NAME,
+            app_version=VERSION if has_external_constants else None,
+            gui_api_version=GUI_VERSION,
+            platform_name=CURRENT_PLATFORM,
         )
-        about_text = (
-            f"<h2>{VERSION_NAME}</h2>"
-            f"{version_line}"
-            f"<p><b>GUI API Version:</b> {GUI_VERSION}</p>"
-            f"<p><b>Platform:</b> {CURRENT_PLATFORM.title()}</p>"
-            f"{binding_line}"
-        )
-
-        msg = QMessageBox(self)
-        msg.setWindowTitle(f"About {VERSION_NAME}")
-        msg.setText(about_text)
-        msg.setTextFormat(Qt.TextFormat.RichText)
-        msg.setStandardButtons(QMessageBox.StandardButton.Close)
-        msg.setWindowModality(Qt.WindowModality.NonModal)
-        msg.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         msg.destroyed.connect(lambda: setattr(self, "_about_dialog", None))
 
         self._about_dialog = msg
