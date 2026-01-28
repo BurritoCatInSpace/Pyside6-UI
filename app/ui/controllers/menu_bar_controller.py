@@ -285,6 +285,20 @@ class MenuBarController(QObject):
                 self.restart_admin_action.setToolTip(
                     "Restart the application with administrator privileges"
                 )
+
+    def refresh_for_theme_change(self) -> None:
+        """Force menu bar widgets to re-polish after theme changes."""
+        if not self.menu_bar:
+            return
+        
+        try:
+            style = self.menu_bar.style()
+            style.unpolish(self.menu_bar)
+            style.polish(self.menu_bar)
+            self.menu_bar.updateGeometry()
+            self.menu_bar.update()
+        except Exception:
+            pass
     
     def update_admin_menu(self) -> None:
         """Update the admin menu based on current state.

@@ -24,7 +24,7 @@ from ...qt_bindings import (
 
 if TYPE_CHECKING:
     from ...services.notification_service import NotificationService
-    from ...themes.theme_manager import ThemeManager
+    from ....themes.theme_manager import ThemeManager
     from ..widgets.notification_center import NotificationCenterWidget
 
 logger = logging.getLogger(__name__)

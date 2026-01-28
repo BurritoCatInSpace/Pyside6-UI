@@ -509,6 +509,10 @@ class MainWindow(QMainWindow):
         # Refresh status bar notifications with new theme
         if hasattr(self, 'status_bar_manager') and self.status_bar_manager:
             self.status_bar_manager.refresh_theme()
+
+        # Refresh menu bar styling (especially for blank/default stylesheets)
+        if self.menu_controller:
+            self.menu_controller.refresh_for_theme_change()
         
         # Publish event for subscribers
         self.plugin_registry.publish_event("theme_changed", {"theme": theme_name})

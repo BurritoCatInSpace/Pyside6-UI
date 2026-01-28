@@ -16,7 +16,6 @@ from ...constants import CURRENT_PLATFORM
 
 if TYPE_CHECKING:
     from ...services.container import ServiceContainer
-    from ....plugin_system.base import BaseTabPlugin
 
 from ...services.plugin_registry_facade import PluginRegistryFacade
 
