@@ -20,7 +20,10 @@ def _resolve_binding() -> str:
 
     Priority:
       1. Explicit ``QT_BINDING`` env var (``pyside6`` or ``pyqt6``).
-      2. Auto-detect: try PySide6 first, fall back to PyQt6.
+      2. Auto-detect: try importing PySide6 first, fall back to PyQt6.
+
+    Uses real imports (not ``find_spec``) so missing native libraries
+    (e.g. ``libxkbcommon.so``) are caught and the fallback kicks in.
 
     This ensures PyInstaller bundles built with only one binding work
     without requiring the env var to be baked in.
@@ -30,20 +33,17 @@ def _resolve_binding() -> str:
         return explicit
 
     # Auto-detect: prefer PySide6, fall back to PyQt6.
-    try:
-        import importlib.util
-        if importlib.util.find_spec("PySide6") is not None:
-            return "pyside6"
-    except Exception:
-        pass
-    try:
-        import importlib.util
-        if importlib.util.find_spec("PyQt6") is not None:
-            return "pyqt6"
-    except Exception:
-        pass
+    # We must actually import to surface missing shared-library errors
+    # that find_spec would not catch.
+    for binding in ("pyside6", "pyqt6"):
+        try:
+            __import__("PySide6" if binding == "pyside6" else "PyQt6")
+            return binding
+        except Exception:
+            continue
 
-    # Default if neither can be probed (let the import fail with a clear message).
+    # Default if neither can be imported (let the later import fail with
+    # a clear message).
     return "pyside6"
 
 
