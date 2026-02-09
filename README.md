@@ -68,4 +68,8 @@ Run these commands from the directory that contains `main.py` and the `GUI/` fol
   - Ensure you are running the command from the directory that contains both `main.py` and the `GUI/` folder.
   - Confirm `main.py` is not inside the `GUI/` directory.
 
+### Documentation
+- Start here: [GUI docs index](docs/index.md)
+- Architecture diagram: [GUI flowchart](docs/flowchart.md)
+
 

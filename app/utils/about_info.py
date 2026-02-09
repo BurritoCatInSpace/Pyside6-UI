@@ -7,6 +7,8 @@ keeping `ui/main_window.py` focused on window behavior.
 
 from __future__ import annotations
 
+import platform
+import sys
 from typing import Optional
 
 
@@ -45,6 +47,23 @@ def _build_distro_line(platform_name: str) -> str:
             if BUILD_TIME_UTC and BUILD_TIME_UTC != "unknown":
                 return f"<p><b>Build distro:</b> {BUILD_DISTRO} <small>({BUILD_TIME_UTC})</small></p>"
             return f"<p><b>Build distro:</b> {BUILD_DISTRO}</p>"
+    except Exception:
+        pass
+    return ""
+
+
+def _python_version_line() -> str:
+    """Return a Python version line, only visible in dev mode."""
+    try:
+        from .admin import is_dev_mode
+
+        if not is_dev_mode():
+            return ""
+
+        version = platform.python_version()
+        impl = platform.python_implementation()
+        arch = platform.machine() or "unknown"
+        return f"<p><b>Python:</b> {impl} {version} ({arch})</p>"
     except Exception:
         pass
     return ""
@@ -108,6 +127,7 @@ def build_about_info(
             distro_line = f"<p><b>Distro:</b> {pretty}</p>"
 
     build_distro_line = _build_distro_line(str(platform_name))
+    python_line = _python_version_line()
 
     return (
         f"<h2>{app_name}</h2>"
@@ -116,6 +136,7 @@ def build_about_info(
         f"<p><b>Platform:</b> {str(platform_name).title()}</p>"
         f"{distro_line}"
         f"{build_distro_line}"
+        f"{python_line}"
         f"{binding_line}"
     )
 

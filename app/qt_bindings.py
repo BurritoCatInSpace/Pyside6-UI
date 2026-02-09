@@ -9,22 +9,176 @@ Supported bindings (via QT_BINDING env var): pyside6 (default), pyqt6.
 
 from __future__ import annotations
 
+import importlib.abc
+import importlib.machinery
 import os
 import sys
 import types
 
-_binding = os.getenv("QT_BINDING", "pyside6").lower()
+def _resolve_binding() -> str:
+    """Determine which Qt binding to use.
+
+    Priority:
+      1. Explicit ``QT_BINDING`` env var (``pyside6`` or ``pyqt6``).
+      2. Auto-detect: try PySide6 first, fall back to PyQt6.
+
+    This ensures PyInstaller bundles built with only one binding work
+    without requiring the env var to be baked in.
+    """
+    explicit = os.getenv("QT_BINDING", "").strip().lower()
+    if explicit:
+        return explicit
+
+    # Auto-detect: prefer PySide6, fall back to PyQt6.
+    try:
+        import importlib.util
+        if importlib.util.find_spec("PySide6") is not None:
+            return "pyside6"
+    except Exception:
+        pass
+    try:
+        import importlib.util
+        if importlib.util.find_spec("PyQt6") is not None:
+            return "pyqt6"
+    except Exception:
+        pass
+
+    # Default if neither can be probed (let the import fail with a clear message).
+    return "pyside6"
+
+
+_binding = _resolve_binding()
 
 
 def get_binding_name() -> str:
     """Return the active Qt binding name."""
     return _binding
 
-if _binding in {"pyqt6", "pyqt"}:
+
+# ---------------------------------------------------------------------------
+# PyQt6 mode: neutralize shiboken and provide PySide6 -> PyQt6 shims
+# ---------------------------------------------------------------------------
+
+def _setup_pyqt6_shim() -> None:
+    """Block real PySide6/shiboken imports and install PyQt6-backed shims.
+
+    PySide6 installs a shiboken bootstrap (via a .pth file) that registers
+    a deferred import hook.  When *anything* later causes the hook to fire
+    it expects the real PySide6 C extensions which our shim cannot provide.
+
+    Strategy:
+      1. Install a meta-path blocker at the *front* of ``sys.meta_path``
+         that intercepts any real PySide6 / shiboken import and returns our
+         shim modules (or raises ``ImportError`` for unknown sub-modules).
+      2. Evict any partially-loaded PySide6 / shiboken entries from
+         ``sys.modules`` so the blocker takes precedence.
+      3. Remove any shiboken meta-path finders that were installed at
+         interpreter startup.
+      4. Populate ``sys.modules`` with the shim entries.
+    """
     from PyQt6 import QtCore, QtGui, QtWidgets
-    Signal = QtCore.pyqtSignal
-    Slot = QtCore.pyqtSlot
-    Property = QtCore.pyqtProperty
+
+    _Signal = QtCore.pyqtSignal
+    _Slot = QtCore.pyqtSlot
+    _Property = QtCore.pyqtProperty
+
+    # -- Build shim modules ------------------------------------------------
+
+    def _make_module(name: str, *, is_package: bool = False) -> types.ModuleType:
+        mod = types.ModuleType(name)
+        mod.__spec__ = importlib.machinery.ModuleSpec(
+            name, None, is_package=is_package,
+        )
+        mod.__package__ = name if is_package else name.rpartition(".")[0]
+        if is_package:
+            mod.__path__ = []
+        return mod
+
+    pyside6 = _make_module("PySide6", is_package=True)
+    pyside6.__dict__.update(
+        QtCore=QtCore,
+        QtGui=QtGui,
+        QtWidgets=QtWidgets,
+        Signal=_Signal,
+        Slot=_Slot,
+        Property=_Property,
+    )
+
+    # Stub sub-packages that shiboken's bootstrap probes.
+    _support = _make_module("PySide6.support", is_package=True)
+    _support_sig = _make_module("PySide6.support.signature", is_package=True)
+    _support_sig_lib = _make_module("PySide6.support.signature.lib", is_package=True)
+    _support.signature = _support_sig
+    _support_sig.lib = _support_sig_lib
+    pyside6.support = _support
+
+    # Map of shim names we own.
+    _shim_modules: dict[str, types.ModuleType] = {
+        "PySide6": pyside6,
+        "PySide6.QtCore": QtCore,
+        "PySide6.QtGui": QtGui,
+        "PySide6.QtWidgets": QtWidgets,
+        "PySide6.support": _support,
+        "PySide6.support.signature": _support_sig,
+        "PySide6.support.signature.lib": _support_sig_lib,
+    }
+
+    # -- Meta-path blocker -------------------------------------------------
+
+    _BLOCKED_ROOTS = frozenset(("PySide6", "shiboken6", "shibokensupport"))
+
+    class _PySide6Blocker(importlib.abc.MetaPathFinder, importlib.abc.Loader):
+        """Intercept PySide6 / shiboken imports.
+
+        * Known shim names  -> return our shim from ``_shim_modules``.
+        * Other PySide6.*   -> raise ``ImportError`` (prevents shiboken
+          from finding the real C extensions).
+        * shiboken*         -> raise ``ImportError``.
+        """
+
+        def find_module(self, fullname: str, path=None):
+            top = fullname.split(".", 1)[0]
+            if top in _BLOCKED_ROOTS:
+                return self
+            return None
+
+        def load_module(self, fullname: str):
+            if fullname in _shim_modules:
+                mod = _shim_modules[fullname]
+                sys.modules[fullname] = mod
+                return mod
+            raise ImportError(
+                f"{fullname} is not available (using PyQt6 binding)"
+            )
+
+    # -- Apply -------------------------------------------------------------
+
+    # 1. Remove existing shiboken finders.
+    sys.meta_path[:] = [
+        f for f in sys.meta_path
+        if not (
+            "shiboken" in getattr(type(f), "__module__", "")
+            or "shiboken" in type(f).__name__.lower()
+        )
+    ]
+
+    # 2. Evict partially-loaded entries.
+    for key in list(sys.modules):
+        if key.split(".", 1)[0] in _BLOCKED_ROOTS:
+            del sys.modules[key]
+
+    # 3. Install our blocker at the *front* so it wins over any remaining
+    #    finders (including the default file-system finder).
+    sys.meta_path.insert(0, _PySide6Blocker())
+
+    # 4. Populate sys.modules with shim entries.
+    sys.modules.update(_shim_modules)
+
+    return QtCore, QtGui, QtWidgets, _Signal, _Slot, _Property
+
+
+if _binding in {"pyqt6", "pyqt"}:
+    QtCore, QtGui, QtWidgets, Signal, Slot, Property = _setup_pyqt6_shim()
     # Provide PySide6-style Signal/Slot/Property on QtCore module.
     if not hasattr(QtCore, "Signal"):
         QtCore.Signal = Signal
@@ -56,20 +210,6 @@ if _binding in {"pyqt6", "pyqt"}:
         QtCore.Qt.WA_DeleteOnClose = QtCore.Qt.WidgetAttribute.WA_DeleteOnClose
     if not hasattr(QtWidgets.QMessageBox, "Close"):
         QtWidgets.QMessageBox.Close = QtWidgets.QMessageBox.StandardButton.Close
-    # Provide PySide6 import shims when running on PyQt6.
-    pyside6 = types.ModuleType("PySide6")
-    pyside6.__dict__.update(
-        QtCore=QtCore,
-        QtGui=QtGui,
-        QtWidgets=QtWidgets,
-        Signal=Signal,
-        Slot=Slot,
-        Property=Property,
-    )
-    sys.modules["PySide6"] = pyside6
-    sys.modules["PySide6.QtCore"] = QtCore
-    sys.modules["PySide6.QtGui"] = QtGui
-    sys.modules["PySide6.QtWidgets"] = QtWidgets
 elif _binding in {"pyside6", "pyside"}:
     from PySide6 import QtCore, QtGui, QtWidgets
     Signal = QtCore.Signal

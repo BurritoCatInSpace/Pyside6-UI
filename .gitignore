@@ -32,6 +32,7 @@ MANIFEST
 *.manifest
 *.spec
 app/_build_info_generated.py
+scripts/_version_info.txt
 
 # Installer logs
 pip-log.txt
