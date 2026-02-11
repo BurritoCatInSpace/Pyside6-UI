@@ -201,6 +201,15 @@ if _binding in {"pyqt6", "pyqt"}:
         QtWidgets.QTreeWidget.ExtendedSelection = QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection
     if not hasattr(QtCore.Qt, "CustomContextMenu"):
         QtCore.Qt.CustomContextMenu = QtCore.Qt.ContextMenuPolicy.CustomContextMenu
+    # GlobalColor aliases (PySide6-style, e.g. Qt.red -> Qt.GlobalColor.red).
+    for _color_name in (
+        "white", "black", "red", "darkRed", "green", "darkGreen",
+        "blue", "darkBlue", "cyan", "darkCyan", "magenta", "darkMagenta",
+        "yellow", "darkYellow", "gray", "darkGray", "lightGray",
+        "transparent", "color0", "color1",
+    ):
+        if not hasattr(QtCore.Qt, _color_name) and hasattr(QtCore.Qt.GlobalColor, _color_name):
+            setattr(QtCore.Qt, _color_name, getattr(QtCore.Qt.GlobalColor, _color_name))
     # About dialog enum aliases (PySide6-style).
     if not hasattr(QtCore.Qt, "RichText"):
         QtCore.Qt.RichText = QtCore.Qt.TextFormat.RichText

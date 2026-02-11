@@ -86,7 +86,7 @@ def _read_pretty_name() -> str:
 
 def main() -> int:
     repo_root = Path(__file__).resolve().parent.parent
-    target = repo_root / "GUI" / "app" / "_build_info_generated.py"
+    target = repo_root / "app" / "_build_info_generated.py"
 
     distro = _read_pretty_name()
     now = (

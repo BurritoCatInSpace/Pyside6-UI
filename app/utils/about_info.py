@@ -7,6 +7,7 @@ keeping `ui/main_window.py` focused on window behavior.
 
 from __future__ import annotations
 
+import datetime
 import platform
 import sys
 from typing import Optional
@@ -29,6 +30,19 @@ def _read_linux_pretty_name() -> Optional[str]:
     return None
 
 
+def _format_build_time(raw: str) -> str:
+    """Turn an ISO 8601 UTC timestamp into a friendly string.
+
+    ``"2026-02-11T12:30:00Z"`` -> ``"Feb 11, 2026 at 12:30 PM UTC"``
+    Falls back to *raw* if parsing fails.
+    """
+    try:
+        dt = datetime.datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        return dt.strftime("%b %d, %Y at %I:%M %p UTC").replace(" 0", " ")
+    except Exception:
+        return raw
+
+
 def _build_distro_line(platform_name: str) -> str:
     try:
         from .admin import is_dev_mode
@@ -40,12 +54,12 @@ def _build_distro_line(platform_name: str) -> str:
         # On Windows, show build time only (avoid redundant Platform/Distro lines).
         if str(platform_name).lower() == "windows":
             if BUILD_TIME_UTC and BUILD_TIME_UTC != "unknown":
-                return f"<p><b>Build time:</b> {BUILD_TIME_UTC}</p>"
+                return f"<p><b>Build time:</b> {_format_build_time(BUILD_TIME_UTC)}</p>"
             return ""
 
         if BUILD_DISTRO and BUILD_DISTRO != "unknown":
             if BUILD_TIME_UTC and BUILD_TIME_UTC != "unknown":
-                return f"<p><b>Build distro:</b> {BUILD_DISTRO} <small>({BUILD_TIME_UTC})</small></p>"
+                return f"<p><b>Build distro:</b> {BUILD_DISTRO} <small>({_format_build_time(BUILD_TIME_UTC)})</small></p>"
             return f"<p><b>Build distro:</b> {BUILD_DISTRO}</p>"
     except Exception:
         pass
