@@ -19,7 +19,6 @@ APT_PACKAGES = [
     'libxcb-image0',
     'libxcb-keysyms1',
     'libxcb-render-util0',
-    'libxkbcommon0',
     'libxkbcommon-x11-0',
     'qtwayland5',
 ]
