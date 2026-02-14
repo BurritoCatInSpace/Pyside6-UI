@@ -59,7 +59,7 @@ def get_binding_name() -> str:
 # PyQt6 mode: neutralize shiboken and provide PySide6 -> PyQt6 shims
 # ---------------------------------------------------------------------------
 
-def _setup_pyqt6_shim() -> None:
+def _setup_pyqt6_shim() -> tuple[types.ModuleType, types.ModuleType, types.ModuleType, type, type, type]:
     """Block real PySide6/shiboken imports and install PyQt6-backed shims.
 
     PySide6 installs a shiboken bootstrap (via a .pth file) that registers

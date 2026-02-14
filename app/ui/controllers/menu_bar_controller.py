@@ -146,6 +146,7 @@ class MenuBarController(QObject):
             On Linux: Always shows to allow starting the daemon.
         """
         # Allow hiding the Admin menu/button (e.g., kiosk/demo mode)
+        force_show_for_dev = False
         try:
             # In dev mode, always show the Admin menu (temporary override)
             from ...utils.admin import is_dev_mode
@@ -156,6 +157,7 @@ class MenuBarController(QObject):
                 return
             if self.settings_service and self.settings_service.get_hide_admin_menu() and dev_mode_active:
                 logger.debug("Dev mode active - overriding hide_admin_menu to show Admin menu")
+                force_show_for_dev = True
         except Exception:
             # Fail open: if settings are unavailable, keep existing behavior
             pass
@@ -169,7 +171,10 @@ class MenuBarController(QObject):
         elif CURRENT_PLATFORM == "linux":
             # On Linux, always show the menu to allow starting the daemon
             should_show = True
-        
+
+        if force_show_for_dev:
+            should_show = True
+
         if should_show:
             admin_menu = QMenu("Admin", self.parent_widget)
             self.menu_bar.addMenu(admin_menu)
