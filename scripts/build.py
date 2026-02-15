@@ -293,10 +293,13 @@ def generate_windows_version_info(
 def _collect_hidden_imports() -> List[str]:
     """Return hidden imports for modules PyInstaller cannot trace statically.
 
-    Most of the application is reachable through the normal import graph
-    starting at ``main.py`` (or ``run.py`` in standalone mode):
+    Most of the application is reachable through the normal import graph:
+    - Non-standalone: main.py -> GUI.app.app -> services, ui, themes, ...
+    - Standalone: standalone_entry.py -> app.app -> services, ui, themes, ...
 
-      main.py -> GUI.app.app -> services, ui, themes, plugin_system, ...
+    Standalone uses standalone_entry.py (not run.py) because run.py relies on
+    runtime sys.modules patching for ``GUI``; PyInstaller does not execute that
+    shim, so ``GUI.app.*`` imports would not be discovered.
 
     Plugin modules are pulled in via their respective ``core_plugins.py``
     which uses explicit static imports specifically so PyInstaller can
@@ -306,7 +309,7 @@ def _collect_hidden_imports() -> List[str]:
     imports = [
         # The generated build-info module is imported via a try/except and
         # may not exist at analysis time.
-        "GUI.app._build_info_generated",
+        "app._build_info_generated" if IS_STANDALONE else "GUI.app._build_info_generated",
     ]
 
     if not IS_STANDALONE:
@@ -336,11 +339,15 @@ def build_pyinstaller_args(opts: argparse.Namespace, consts: dict[str, object]) 
     """Assemble the ``pyinstaller`` CLI arguments from parsed options."""
     # Determine the entry point
     if IS_STANDALONE:
-        entry = str(GUI_ROOT / "run.py")
+        entry = str(GUI_ROOT / "standalone_entry.py")
     else:
         entry = str(PROJECT_ROOT / "main.py")
 
     args: List[str] = ["pyinstaller"]
+
+    # Standalone: add GUI root to module search path so "app" package is found.
+    if IS_STANDALONE:
+        args.extend(["--paths", str(GUI_ROOT)])
 
     # -- One-file vs one-dir ---------------------------------------------------
     if opts.onedir:

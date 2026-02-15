@@ -130,26 +130,41 @@ def _setup_pyqt6_shim() -> tuple[types.ModuleType, types.ModuleType, types.Modul
     class _PySide6Blocker(importlib.abc.MetaPathFinder, importlib.abc.Loader):
         """Intercept PySide6 / shiboken imports.
 
+        Uses find_spec / create_module / exec_module (PEP 451) for Python 3.12+.
         * Known shim names  -> return our shim from ``_shim_modules``.
         * Other PySide6.*   -> raise ``ImportError`` (prevents shiboken
           from finding the real C extensions).
         * shiboken*         -> raise ``ImportError``.
         """
 
-        def find_module(self, fullname: str, path=None):
+        def find_spec(
+            self,
+            fullname: str,
+            path: object = None,
+            target: object = None,
+        ) -> importlib.machinery.ModuleSpec | None:
             top = fullname.split(".", 1)[0]
-            if top in _BLOCKED_ROOTS:
-                return self
-            return None
-
-        def load_module(self, fullname: str):
+            if top not in _BLOCKED_ROOTS:
+                return None
             if fullname in _shim_modules:
                 mod = _shim_modules[fullname]
-                sys.modules[fullname] = mod
-                return mod
+                return importlib.machinery.ModuleSpec(
+                    fullname,
+                    self,
+                    is_package=hasattr(mod, "__path__"),
+                )
             raise ImportError(
                 f"{fullname} is not available (using PyQt6 binding)"
             )
+
+        def create_module(self, spec: importlib.machinery.ModuleSpec) -> types.ModuleType | None:
+            if spec.name in _shim_modules:
+                return _shim_modules[spec.name]
+            return None
+
+        def exec_module(self, module: types.ModuleType) -> None:
+            # Modules are pre-populated; nothing to execute
+            pass
 
     # -- Apply -------------------------------------------------------------
 
