@@ -1,13 +1,5 @@
 """
 Base plugin classes for the Basic UI Application.
-
-v4.0.0 BREAKING CHANGES:
-- BaseTabPlugin is now instance-based (use `self` instead of `cls`)
-- Constructor receives ServiceContainer for dependency injection
-- Use `plugin_name` and `tab_title` instead of `tab_name`
-- Removed PluginMeta metaclass and aliasing
-
-Legacy 3.x plugins using classmethods will continue to work via LegacyPluginAdapter.
 """
 from __future__ import annotations
 
@@ -30,14 +22,30 @@ from .interfaces import (
     ServiceExtension,
     EventSubscriberExtension,
     SettingsExtension,
-    Plugin,  # Legacy ABC
 )
+
+
+def _normalize_platform_name_for_matching(name: str) -> str:
+    """Normalize platform names for matching against supported_platforms.
+
+    This allows plugins to declare user-friendly labels like "macOS" while
+    Python's platform.system() returns identifiers such as "Darwin".
+    """
+    s = str(name).strip().lower()
+    if s in ("windows", "win32"):
+        return "Windows"
+    if s == "linux":
+        return "Linux"
+    if s in ("darwin", "macos", "mac os", "osx", "mac os x"):
+        return "macOS"
+    # Fallback: capitalize the original for best-effort matching.
+    return str(name).capitalize()
 
 
 class BaseTabPlugin:
     """Base class for tab plugins with service injection.
     
-    v4.0.0: This is now an instance-based class. Plugins receive a 
+    This is now an instance-based class. Plugins receive a 
     ServiceContainer in their constructor and use instance methods.
     
     For backward compatibility, both old (tab_name) and new (plugin_name/tab_title)
@@ -142,7 +150,12 @@ class BaseTabPlugin:
         """
         if not cls.supported_platforms:
             return True  # Empty = all platforms supported
-        return platform_name.capitalize() in cls.supported_platforms
+
+        target = _normalize_platform_name_for_matching(platform_name)
+        supported_normalized = {
+            _normalize_platform_name_for_matching(p) for p in cls.supported_platforms
+        }
+        return target in supported_normalized
     
     @classmethod
     def get_current_platform(cls) -> str:
@@ -182,7 +195,7 @@ class BaseTabPlugin:
             description = getattr(cls, 'tab_description', "No description provided")
 
         # If supported_platforms is empty, show all application-supported platforms
-        display_platforms = cls.supported_platforms if cls.supported_platforms else ["Windows", "Linux"]
+        display_platforms = cls.supported_platforms if cls.supported_platforms else ["Windows", "Linux", "macOS"]
         
         return {
             'name': name,
@@ -242,13 +255,30 @@ class BaseTabPlugin:
 class CoreTabPlugin(BaseTabPlugin):
     """Base class for core (built-in) tab plugins."""
     
-    plugin_author: str = "Basic GUI Application Team"
     is_core_plugin: bool = True
+
+    @classmethod
+    def _default_core_author(cls) -> str:
+        """Derive the default author string from VERSION_NAME."""
+        try:
+            from ..app.constants import VERSION_NAME
+            return f"{VERSION_NAME} Team"
+        except Exception:
+            return "Core Team"
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        super().__init_subclass__(**kwargs)
+        # Only set the default if the subclass hasn't explicitly overridden it
+        if cls.plugin_author == "Unknown":
+            cls.plugin_author = cls._default_core_author()
+
 
 
 # =============================================================================
 # Legacy 3.x support
 # =============================================================================
+
+from .compatibility import Plugin
 
 class LegacyBaseTabPlugin(Plugin):
     """Legacy base class for 3.x classmethod-based plugins.

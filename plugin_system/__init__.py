@@ -19,10 +19,9 @@ from .interfaces import (
     ServiceExtension,
     EventSubscriberExtension,
     SettingsExtension,
-    Plugin,  # Legacy ABC
 )
 from .types import MenuItemDefinition, ToolbarAction, PluginEvent
-from .compatibility import LegacyPluginAdapter, wrap_legacy_plugin
+from .compatibility import LegacyPluginAdapter, wrap_legacy_plugin, Plugin
 
 __all__ = [
     # v4.0.0 base classes

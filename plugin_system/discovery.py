@@ -17,7 +17,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Type
 
-from .base import BaseTabPlugin, plugin_registry
+from .base import BaseTabPlugin
+from .registry import PluginRegistry, plugin_registry
 from .sources import PluginSource
 
 # Try to import entry_points (Python 3.8+)
@@ -210,13 +211,6 @@ class PluginDiscovery:
         module_name = self._module_name_for_path(py_file)
         logger.debug(f"Attempting to load local plugin module: {module_name}")
         
-        # Ensure legacy import aliases are installed before executing plugin code.
-        try:
-            from .import_aliases import install_import_aliases
-            install_import_aliases()
-        except Exception:
-            pass
-        
         spec = importlib.util.spec_from_file_location(module_name, py_file)
         if spec is None or spec.loader is None:
             logger.warning(f"Could not create spec for {py_file}")
@@ -227,10 +221,18 @@ class PluginDiscovery:
         
         plugin_classes = self._find_plugin_classes_in_module(module)
         for plugin_class in plugin_classes:
-            # v4.0.0: Prefer plugin_name, fall back to tab_name
+            # Prefer plugin_name, fall back to tab_name
             plugin_name = getattr(plugin_class, 'plugin_name', None)
             if not plugin_name or plugin_name == "Unnamed Plugin":
                 plugin_name = getattr(plugin_class, 'tab_name', "Unknown Plugin")
+                if plugin_name != "Unknown Plugin":
+                    import warnings
+                    warnings.warn(
+                        f"Plugin '{plugin_class.__name__}' uses deprecated 'tab_name' attribute. "
+                        f"Migrate to 'plugin_name' before the next major release.",
+                        DeprecationWarning,
+                        stacklevel=2,
+                    )
                 
             plugins.append((plugin_name, plugin_class, f"local:{py_file.name}"))
             logger.info(f"Successfully loaded local plugin: {plugin_name} from {py_file.name}")
@@ -280,7 +282,7 @@ class PluginDiscovery:
                 return False
 
             # Must have a valid identifier (plugin_name OR tab_name)
-            # v4.0.0: plugin_name is preferred, legacy uses tab_name
+            # plugin_name is preferred, legacy uses tab_name
             has_plugin_name = bool(getattr(cls, 'plugin_name', None)) and getattr(cls, 'plugin_name') != "Unnamed Plugin"
             has_tab_name = bool(getattr(cls, 'tab_name', None)) and getattr(cls, 'tab_name') != "Unnamed Tab"
             if not has_plugin_name and not has_tab_name:
@@ -327,19 +329,19 @@ class PluginDiscovery:
             try:
                 pkg = importlib.import_module(source.package)
             except Exception as e:
-                logger.debug("Package source not importable (%s): %s", source.package, e)
+                logger.debug(f"Package source not importable ({source.package}): {e}")
                 continue
 
             pkg_path = getattr(pkg, "__path__", None)
             if not pkg_path:
-                logger.debug("Package source has no __path__ (%s), skipping", source.package)
+                logger.debug(f"Package source has no __path__ ({source.package}), skipping")
                 continue
 
             for modinfo in pkgutil.iter_modules(pkg.__path__, prefix=f"{source.package}."):
                 try:
                     module = importlib.import_module(modinfo.name)
                 except Exception as e:
-                    logger.warning("Failed to import plugin module %s: %s", modinfo.name, e)
+                    logger.warning(f"Failed to import plugin module {modinfo.name}: {e}")
                     continue
 
                 for plugin_class in self._find_plugin_classes_in_module(module):
@@ -386,7 +388,7 @@ class PluginDiscovery:
                 logger.error(f"Failed to register plugin {plugin_name}: {e}")
         
         return registration_results
-    
+
     def get_plugin_info_summary(self) -> Dict[str, any]:
         """
         Get a summary of all discovered plugins.
