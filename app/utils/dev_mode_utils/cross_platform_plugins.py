@@ -124,7 +124,12 @@ def _create_prefixed_plugin(original_class: Type[Any], platform_prefix: str) -> 
     Returns:
         A new class with prefixed tab_name
     """
-    original_tab_name = getattr(original_class, 'tab_title', getattr(original_class, 'plugin_name', 'Unknown'))
+    # Support both modern (tab_title/plugin_name) and legacy (tab_name) naming
+    original_tab_name = getattr(original_class, 'tab_title', None)
+    if not original_tab_name or original_tab_name == "Unnamed Tab":
+        original_tab_name = getattr(original_class, 'plugin_name', None)
+    if not original_tab_name or original_tab_name == "Unnamed Plugin":
+        original_tab_name = getattr(original_class, 'tab_name', 'Unknown')
     prefixed_name = f"{platform_prefix} {original_tab_name}"
     
     # Create a new class that inherits from the original but with modified plugin_name/tab_title
@@ -165,12 +170,18 @@ def _discover_platform_plugins(target_platform: str) -> List[Type[Any]]:
     
     logger.info(f"Discovering {target_platform} plugins from: {tabs_dir}")
     
-    # Get the BaseTabPlugin class for isinstance checking
+    # Get plugin base classes for isinstance checking (both modern and legacy)
     try:
-        from ....plugin_system.base import BaseTabPlugin
+        from ....plugin_system.base import BaseTabPlugin, LegacyBaseTabPlugin
+        from ....plugin_system.compatibility import Plugin as LegacyPluginABC
+        plugin_bases = (BaseTabPlugin, LegacyBaseTabPlugin, LegacyPluginABC)
     except ImportError:
-        logger.error("Could not import BaseTabPlugin")
-        return plugins
+        try:
+            from ....plugin_system.base import BaseTabPlugin
+            plugin_bases = (BaseTabPlugin,)
+        except ImportError:
+            logger.error("Could not import BaseTabPlugin")
+            return plugins
     
     # Ensure the app_plugins directory is in sys.path for imports
     app_plugins_parent = str(app_plugins_dir.parent)
@@ -200,14 +211,14 @@ def _discover_platform_plugins(target_platform: str) -> List[Type[Any]]:
             
             # Find plugin classes in the module
             for name, obj in inspect.getmembers(module, inspect.isclass):
-                # Check if it's a plugin class (inherits from BaseTabPlugin)
-                if (obj is not BaseTabPlugin and 
-                    issubclass(obj, BaseTabPlugin) and
-                    (hasattr(obj, 'plugin_name') or hasattr(obj, 'tab_title'))):
+                # Check if it's a plugin class (inherits from any known plugin base)
+                if (obj not in plugin_bases and 
+                    issubclass(obj, plugin_bases) and
+                    (hasattr(obj, 'plugin_name') or hasattr(obj, 'tab_title') or hasattr(obj, 'tab_name'))):
                     # Create a prefixed version to avoid name conflicts
                     prefixed_plugin = _create_prefixed_plugin(obj, platform_prefix)
                     plugins.append(prefixed_plugin)
-                    logger.debug(f"Discovered {target_platform} plugin: {prefixed_plugin.tab_title}")
+                    logger.debug(f"Discovered {target_platform} plugin: {getattr(prefixed_plugin, 'plugin_name', prefixed_plugin.__name__)}")
                     
         except Exception as e:
             logger.warning(f"Could not load module {module_name}: {e}")
