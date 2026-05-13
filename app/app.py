@@ -64,6 +64,12 @@ def run(argv: List[str]) -> int:
     logger.info(f"Starting {VERSION_NAME} v{VERSION} on {platform.system().lower()}")
     logger.info(f"GUI API Version: v{GUI_API_VERSION}")
 
+    # Install legacy import aliases used by some plugin modules (best-effort).
+    from ..plugin_system.import_aliases import install_import_aliases
+    installed_aliases = install_import_aliases()
+    if installed_aliases:
+        logger.debug("Installed plugin import aliases: %s", installed_aliases)
+
     # Log dev mode status now that logging is configured
     if is_dev:
         logger.warning("DEV MODE ENABLED - admin requirements bypassed, Dev menu available")

@@ -23,6 +23,7 @@ from ...plugin_system.registry import PluginRegistry
 from ...plugin_system.base import BaseTabPlugin
 from ...plugin_system.discovery import PluginDiscovery
 from ...plugin_system.sources import PluginSource
+from ...plugin_system.import_aliases import install_import_aliases
 from ..utils.paths import parent_has_gui_plugin_dirs
 
 if TYPE_CHECKING:

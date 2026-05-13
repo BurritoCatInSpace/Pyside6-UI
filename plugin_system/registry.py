@@ -1,6 +1,12 @@
 """
 Plugin registry system for managing discovered and loaded plugins.
 
+v4.0.0 BREAKING CHANGES:
+- Registry now accepts ServiceContainer for plugin instantiation
+- Plugins are instantiated on-demand via get_plugin_instance()
+- Legacy 3.x plugins are wrapped via LegacyPluginAdapter
+- Interface checking uses Protocol-based isinstance()
+
 The registry maintains both plugin classes (for compatibility) and 
 plugin instances (for the new instance-based architecture).
 """
@@ -263,8 +269,9 @@ class PluginRegistry:
         
         if not self._container:
             raise ValueError("ServiceContainer not set - call set_container() first")
-        # Instantiate strict new-architecture plugin directly
-        instance = plugin_class(self._container)
+        # Use LegacyPluginAdapter for 3.x plugins, instantiate v4.0 plugins directly
+        from .compatibility import LegacyPluginAdapter, wrap_legacy_plugin
+        instance = wrap_legacy_plugin(plugin_class, self._container)
         self._plugin_instances[name] = instance
         
         logger.debug(f"Created instance for plugin: {name}")
@@ -646,4 +653,7 @@ class PluginRegistry:
         return futures
 
 
-__all__ = ['PluginRegistry']
+# Global singleton instance (for backward compatibility)
+plugin_registry = PluginRegistry()
+
+__all__ = ['PluginRegistry', 'plugin_registry']
